@@ -826,28 +826,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _startVideoCall() {
-    // Navigate to video call screen
-    Navigator.pushNamed(
-      context,
-      '/video_call',
-      arguments: {
-        'channelName': widget.chatRoomId,
-        'doctorName': widget.doctorName,
-        'isVideoCall': true,
-      },
+    // Show message that video call is not available
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('خدمة المكالمات المرئية غير متاحة حالياً')),
     );
   }
 
   void _startVoiceCall() {
-    // Navigate to voice call screen
-    Navigator.pushNamed(
-      context,
-      '/video_call',
-      arguments: {
-        'channelName': widget.chatRoomId,
-        'doctorName': widget.doctorName,
-        'isVideoCall': false,
-      },
+    // Show message that voice call is not available
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('خدمة المكالمات الصوتية غير متاحة حالياً')),
     );
   }
 

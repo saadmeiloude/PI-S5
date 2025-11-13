@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/user.dart';
+import '../providers/chat_provider.dart';
+import '../providers/user_provider.dart';
 
 class DoctorDetailsScreen extends StatelessWidget {
-  const DoctorDetailsScreen({super.key});
+  final Doctor doctor;
+
+  const DoctorDetailsScreen({super.key, required this.doctor});
 
   final Color _primaryColor = const Color(0xFF00BFFF); // Bright blue color
 
@@ -286,22 +292,28 @@ class DoctorDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          'الدكتور عادل الرحمن',
-                          style: TextStyle(
+                        Text(
+                          doctor.name,
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const Text(
-                          'التخصص: جراحة العظام',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        Text(
+                          'التخصص: ${doctor.specialty}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
                           textAlign: TextAlign.center,
                         ),
-                        const Text(
-                          'خبرة 10 سنوات',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        Text(
+                          'خبرة ${doctor.experienceYears} سنوات',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -311,10 +323,10 @@ class DoctorDetailsScreen extends StatelessWidget {
 
                   // 2. Qualifications Section
                   _buildSectionTitle('المؤهلات'),
-                  const Text(
-                    'دكتوراه في جراحة العظام من جامعة القاهرة ودكتوراه في التخصص الدقيق من جامعة الإسكندرية',
+                  Text(
+                    doctor.qualifications,
                     textAlign: TextAlign.right,
-                    style: TextStyle(fontSize: 15, height: 1.5),
+                    style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
 
                   // 3. Reviews Section
@@ -339,9 +351,9 @@ class DoctorDetailsScreen extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text(
-                            '4.8',
-                            style: TextStyle(
+                          Text(
+                            doctor.rating.toString(),
+                            style: const TextStyle(
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
                             ),
@@ -350,9 +362,11 @@ class DoctorDetailsScreen extends StatelessWidget {
                             children:
                                 List.generate(5, (index) {
                                       return Icon(
-                                        index < 4
+                                        index < doctor.rating.floor()
                                             ? Icons.star
-                                            : Icons.star_half,
+                                            : (index < doctor.rating
+                                                  ? Icons.star_half
+                                                  : Icons.star_border),
                                         color: Colors.amber,
                                         size: 20,
                                       );
@@ -360,9 +374,9 @@ class DoctorDetailsScreen extends StatelessWidget {
                                     .toList(), // Reverse to display stars from right to left
                           ),
                           const SizedBox(height: 5),
-                          const Text(
-                            'تقييم 125',
-                            style: TextStyle(color: Colors.grey),
+                          Text(
+                            'تقييم ${doctor.reviewCount}',
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         ],
                       ),
@@ -391,11 +405,13 @@ class DoctorDetailsScreen extends StatelessWidget {
 
                   // 4. Working Hours Section
                   _buildSectionTitle('ساعات العمل المتاحة'),
-                  _buildWorkingHourItem(
-                    'الأحد - الخميس',
-                    'صباحاً 9:00 - مساءً 5:00',
+                  ...doctor.workingHours.map(
+                    (hour) => _buildWorkingHourItem(
+                      hour.days,
+                      hour.hours,
+                      isClosed: hour.isClosed,
+                    ),
                   ),
-                  _buildWorkingHourItem('الجمعة والسبت', '', isClosed: true),
 
                   // Padding for the fixed button at the bottom
                   const SizedBox(height: 100),
@@ -424,8 +440,49 @@ class DoctorDetailsScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
-                      print('Book Appointment pressed');
+                    onPressed: () async {
+                      final userProvider = Provider.of<UserProvider>(
+                        context,
+                        listen: false,
+                      );
+                      final chatProvider = Provider.of<ChatProvider>(
+                        context,
+                        listen: false,
+                      );
+
+                      if (userProvider.currentUser != null) {
+                        // Create or get existing chat room
+                        final chatRoomId = await chatProvider.createChatRoom(
+                          doctorId: doctor.id,
+                          patientId: userProvider.currentUser!.id,
+                          doctorName: doctor.name,
+                          patientName: userProvider.currentUser!.name,
+                        );
+
+                        if (chatRoomId != null) {
+                          // Navigate to chat
+                          Navigator.pushNamed(
+                            context,
+                            '/chat',
+                            arguments: {
+                              'chatRoomId': chatRoomId,
+                              'doctorName': doctor.name,
+                            },
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('فشل في إنشاء المحادثة'),
+                            ),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('يجب تسجيل الدخول أولاً'),
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primaryColor,

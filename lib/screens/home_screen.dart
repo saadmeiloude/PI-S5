@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/doctor_provider.dart';
+import '../providers/appointment_provider.dart';
+import '../models/user.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -112,13 +115,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Helper widget for a single Suggested Doctor item
-  Widget _buildDoctorItem(
-    String name,
-    String specialty,
-    bool isFemale, {
-    double rating = 0.0,
-    String experience = '',
-  }) {
+  Widget _buildDoctorItem(BuildContext context, Doctor doctor) {
     // Placeholder for the doctor's image (circular)
     Widget doctorImage = Container(
       width: 80,
@@ -145,81 +142,78 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          isFemale ? Icons.person_4_outlined : Icons.person_3_outlined,
-          size: 36,
-          color: const Color(0xFF00BFFF),
-        ),
+      child: const Center(
+        child: Icon(Icons.person, size: 36, color: Color(0xFF00BFFF)),
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.end, // Align to the right for RTL
-          children: [
-            // Text content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.end, // Align text to the right
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          specialty,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          textAlign: TextAlign.right,
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/doctor_details', arguments: doctor);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 20.0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.end, // Align to the right for RTL
+            children: [
+              // Text content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.end, // Align text to the right
+                    children: [
+                      Text(
+                        doctor.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
-                        if (rating > 0) ...[
+                        textAlign: TextAlign.right,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            doctor.specialty,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
                           const SizedBox(width: 8),
                           Icon(Icons.star, size: 14, color: Colors.amber),
                           Text(
-                            rating.toString(),
+                            doctor.rating.toString(),
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                    if (experience.isNotEmpty) ...[
+                      ),
                       const SizedBox(height: 2),
                       Text(
-                        experience,
+                        'خبرة ${doctor.experienceYears} سنوات',
                         style: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 12,
@@ -227,13 +221,13 @@ class HomeScreen extends StatelessWidget {
                         textAlign: TextAlign.right,
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-            // Image
-            doctorImage,
-          ],
+              // Image
+              doctorImage,
+            ],
+          ),
         ),
       ),
     );
@@ -599,28 +593,18 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // 5. Suggested Doctors List
-                  _buildDoctorItem(
-                    'الدكتورة لينا الراشد',
-                    'أطباء الأسرة والأسنان',
-                    true,
-                    rating: 4.9,
-                    experience: '15 سنة',
+                  Consumer<DoctorProvider>(
+                    builder: (context, doctorProvider, child) {
+                      final doctors = doctorProvider.doctors.take(
+                        3,
+                      ); // Show first 3 doctors
+                      return Column(
+                        children: doctors
+                            .map((doctor) => _buildDoctorItem(context, doctor))
+                            .toList(),
+                      );
+                    },
                   ),
-                  _buildDoctorItem(
-                    'الدكتور عامر السليمان',
-                    'أطباء الأسرة والأسنان',
-                    false,
-                    rating: 4.7,
-                    experience: '12 سنة',
-                  ),
-                  _buildDoctorItem(
-                    'الدكتورة سارة محمد',
-                    'طب الأطفال',
-                    true,
-                    rating: 4.8,
-                    experience: '10 سنوات',
-                  ),
-                  // Add more doctors as needed
                 ],
               ),
             );

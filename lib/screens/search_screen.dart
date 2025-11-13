@@ -1,7 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/doctor_provider.dart';
+import '../models/user.dart';
 
-class SearchScreen extends StatelessWidget {
+class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'الكل';
+  List<Doctor> _filteredDoctors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    _loadDoctors();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _loadDoctors() {
+    final doctorProvider = Provider.of<DoctorProvider>(context, listen: false);
+    _filteredDoctors = doctorProvider.doctors;
+  }
+
+  void _onSearchChanged() {
+    _filterDoctors();
+  }
+
+  void _filterDoctors() {
+    final doctorProvider = Provider.of<DoctorProvider>(context, listen: false);
+    String query = _searchController.text.trim();
+
+    List<Doctor> doctors = doctorProvider.searchDoctors(query);
+
+    if (_selectedFilter != 'الكل') {
+      if (_selectedFilter == 'التخصصات') {
+        // For now, just show all, but could implement specialty filter
+      } else if (_selectedFilter == 'المواقع') {
+        // For now, just show all, but could implement location filter
+      } else if (_selectedFilter == 'التقييمات') {
+        doctors = doctors.where((doctor) => doctor.rating >= 4.5).toList();
+      }
+    }
+
+    setState(() {
+      _filteredDoctors = doctors;
+    });
+  }
+
+  void _onFilterSelected(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
+    _filterDoctors();
+  }
 
   // Helper widget for the search bar
   Widget _buildSearchBar() {
@@ -11,9 +73,10 @@ class SearchScreen extends StatelessWidget {
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const TextField(
+      child: TextField(
+        controller: _searchController,
         textAlign: TextAlign.right,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'ابحث عن الأطباء أو التخصصات',
           hintStyle: TextStyle(color: Colors.grey),
           border: InputBorder.none,
@@ -26,11 +89,23 @@ class SearchScreen extends StatelessWidget {
 
   // Helper widget for a filter chip
   Widget _buildFilterChip(String label) {
+    bool isSelected = _selectedFilter == label;
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
-      child: Chip(
-        label: Text(label, style: const TextStyle(fontSize: 14)),
+      child: FilterChip(
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: isSelected ? Colors.white : Colors.black,
+          ),
+        ),
+        selected: isSelected,
+        onSelected: (selected) {
+          _onFilterSelected(selected ? label : 'الكل');
+        },
         backgroundColor: Colors.grey.shade100,
+        selectedColor: const Color(0xFF00BFFF),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide.none,
@@ -41,7 +116,7 @@ class SearchScreen extends StatelessWidget {
   }
 
   // Helper widget for a single Suggested Doctor item
-  Widget _buildDoctorItem(String name, String specialty, String location) {
+  Widget _buildDoctorItem(Doctor doctor) {
     // Placeholder for the doctor's image (rectangular with rounded corners)
     Widget doctorImage = Container(
       width: 80,
@@ -61,45 +136,51 @@ class SearchScreen extends StatelessWidget {
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end, // Align to the right for RTL
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Text content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 15.0),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.end, // Align text to the right
-                children: [
-                  Text(
-                    'التخصص: $specialty',
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    textAlign: TextAlign.right,
-                  ),
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/doctor_details', arguments: doctor);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 20.0),
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.end, // Align to the right for RTL
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Text content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 15.0),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.end, // Align text to the right
+                  children: [
+                    Text(
+                      'التخصص: ${doctor.specialty}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      textAlign: TextAlign.right,
                     ),
-                    textAlign: TextAlign.right,
-                  ),
-                  Text(
-                    location,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    textAlign: TextAlign.right,
-                  ),
-                ],
+                    Text(
+                      doctor.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                    Text(
+                      doctor.location,
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Image
-          doctorImage,
-        ],
+            // Image
+            doctorImage,
+          ],
+        ),
       ),
     );
   }
@@ -198,6 +279,7 @@ class SearchScreen extends StatelessWidget {
                 reverse: true, // Scroll from right to left for RTL
                 child: Row(
                   children: [
+                    _buildFilterChip('الكل'),
                     _buildFilterChip('التخصصات'),
                     _buildFilterChip('المواقع'),
                     _buildFilterChip('التقييمات'),
@@ -220,22 +302,17 @@ class SearchScreen extends StatelessWidget {
               const SizedBox(height: 15),
 
               // 4. Suggested Doctors List
-              _buildDoctorItem(
-                'الدكتور عادل الرحمن',
-                'أسنان',
-                'المملكة العربية السعودية',
-              ),
-              _buildDoctorItem(
-                'الدكتور عادل الرحمن',
-                'أسنان',
-                'المملكة العربية السعودية',
-              ),
-              _buildDoctorItem(
-                'الدكتور عادل الرحمن',
-                'أسنان',
-                'المملكة العربية السعودية',
-              ),
-              // Add more doctors as needed
+              ..._filteredDoctors.map((doctor) => _buildDoctorItem(doctor)),
+              if (_filteredDoctors.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text(
+                      'لا توجد نتائج',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

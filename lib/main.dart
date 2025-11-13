@@ -5,6 +5,7 @@ import 'providers/appointment_provider.dart';
 import 'providers/doctor_provider.dart';
 import 'providers/chat_provider.dart';
 import 'config/supabase_config.dart';
+import 'models/user.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home.dart';
 import 'screens/home_screen.dart';
@@ -122,7 +123,10 @@ class MyApp extends StatelessWidget {
           '/set_password': (context) => const SetPasswordScreen(),
           '/password_changed': (context) => const PasswordChangedScreen(),
           '/search': (context) => const SearchScreen(),
-          '/doctor_details': (context) => const DoctorDetailsScreen(),
+          '/doctor_details': (context) {
+            final doctor = ModalRoute.of(context)!.settings.arguments as Doctor;
+            return DoctorDetailsScreen(doctor: doctor);
+          },
           '/select_time': (context) => const SelectTimeScreen(),
           '/consultations': (context) => const ConsultationsScreen(),
           '/appointments': (context) => const AppointmentsScreen(),
