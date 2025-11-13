@@ -37,7 +37,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Helper widget for the Upcoming Appointment card
-  Widget _buildAppointmentCard(BuildContext context) {
+  Widget _buildAppointmentCard(
+    BuildContext context, [
+    Appointment? appointment,
+  ]) {
     // Placeholder for the image
     Widget imagePlaceholder = Container(
       height: 140,
@@ -65,6 +68,49 @@ class HomeScreen extends StatelessWidget {
       ),
     );
 
+    if (appointment == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            imagePlaceholder,
+            const SizedBox(height: 12),
+            const Text(
+              'لا توجد مواعيد قادمة',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'احجز موعداً مع طبيبك المفضل',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -83,9 +129,9 @@ class HomeScreen extends StatelessWidget {
         children: [
           imagePlaceholder,
           const SizedBox(height: 12),
-          const Text(
-            'موعد الدكتور عامر السليمان',
-            style: TextStyle(
+          Text(
+            'موعد ${appointment.doctorName}',
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 18,
               color: Colors.black87,
@@ -99,7 +145,7 @@ class HomeScreen extends StatelessWidget {
               Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
               Text(
-                'الأحد، 15 يوليو في 10:00 صباحاً',
+                '${appointment.date.day}/${appointment.date.month}/${appointment.date.year} في ${appointment.time}',
                 style: TextStyle(
                   color: Colors.grey.shade600,
                   fontSize: 14,
@@ -577,7 +623,18 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // 3. Appointment Card
-                  _buildAppointmentCard(context),
+                  Consumer<AppointmentProvider>(
+                    builder: (context, appointmentProvider, child) {
+                      final upcomingAppointments =
+                          appointmentProvider.upcomingAppointments;
+                      if (upcomingAppointments.isNotEmpty) {
+                        final nextAppointment = upcomingAppointments.first;
+                        return _buildAppointmentCard(context, nextAppointment);
+                      } else {
+                        return _buildAppointmentCard(context, null);
+                      }
+                    },
+                  ),
                   const SizedBox(height: 32),
 
                   // 4. Suggested Doctors Section Title
