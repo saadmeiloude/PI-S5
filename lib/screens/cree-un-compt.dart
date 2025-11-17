@@ -233,7 +233,79 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 16),
+
+                // Design tools image
+                Center(
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      maxWidth: 400,
+                      maxHeight: 300,
+                    ),
+                    width: double.infinity,
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _primaryColor.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Stack(
+                            children: [
+                              // Background gradient
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      _primaryColor.withOpacity(0.1),
+                                      const Color(0xFF87CEEB).withOpacity(0.2),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Design tools image
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Image.asset(
+                                    'assets/Design tools-amico.png',
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: _primaryColor.withOpacity(0.1),
+                                        ),
+                                        child: Icon(
+                                          Icons.person_add,
+                                          size: 40,
+                                          color: _primaryColor,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 // Form Fields
                 Expanded(

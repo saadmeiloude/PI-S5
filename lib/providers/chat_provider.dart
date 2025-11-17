@@ -22,47 +22,29 @@ class ChatProvider with ChangeNotifier {
     return _typingUsers[chatRoomId] ?? false;
   }
 
-  // Initialize socket connection
+  // Initialize socket connection - TODO: Implement proper real-time with Supabase
   void initializeSocket(String userId) {
-    _socket = IO.io(
-      SupabaseConfig.supabaseUrl.replaceAll('https://', 'ws://'),
-      <String, dynamic>{
-        'transports': ['websocket'],
-        'autoConnect': true,
-      },
-    );
+    // For now, mark as connected for UI purposes
+    _isConnected = true;
+    notifyListeners();
 
-    _socket!.onConnect((_) {
-      _isConnected = true;
-      _socket!.emit('join', userId);
-      notifyListeners();
-    });
-
-    _socket!.onDisconnect((_) {
-      _isConnected = false;
-      notifyListeners();
-    });
-
-    _socket!.on('message', (data) {
-      final message = ChatMessage.fromJson(data);
-      _addMessage(message);
-    });
-
-    _socket!.on('typing', (data) {
-      final chatRoomId = data['chatRoomId'] as String;
-      final isTyping = data['isTyping'] as bool;
-      _typingUsers[chatRoomId] = isTyping;
-      notifyListeners();
-    });
-
-    _socket!.connect();
+    // TODO: Implement real-time messaging with Supabase subscriptions
+    // Supabase doesn't have direct websocket support like socket.io
+    // Would need to use Supabase real-time subscriptions for messages
   }
 
   // Load chat rooms for user
   Future<void> loadChatRooms(String userId) async {
     try {
-      // This would be implemented with Supabase queries
-      // For now, using sample data
+      final chatRoomsData = await SupabaseService.getUserChatRooms(userId);
+      _chatRooms.clear();
+      _chatRooms.addAll(
+        chatRoomsData.map((data) => ChatRoom.fromJson(data)).toList(),
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading chat rooms: $e');
+      // Fallback to sample data if database fails
       _chatRooms.clear();
       _chatRooms.addAll([
         ChatRoom(
@@ -87,16 +69,20 @@ class ChatProvider with ChangeNotifier {
         ),
       ]);
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error loading chat rooms: $e');
     }
   }
 
   // Load messages for a chat room
   Future<void> loadMessages(String chatRoomId) async {
     try {
-      // This would be implemented with Supabase queries
-      // For now, using sample data
+      final messagesData = await SupabaseService.getChatMessages(chatRoomId);
+      _messages[chatRoomId] = messagesData
+          .map((data) => ChatMessage.fromJson(data))
+          .toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading messages: $e');
+      // Fallback to sample data if database fails
       _messages[chatRoomId] = [
         ChatMessage(
           id: 'msg_001',
@@ -124,8 +110,6 @@ class ChatProvider with ChangeNotifier {
         ),
       ];
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error loading messages: $e');
     }
   }
 
@@ -153,17 +137,21 @@ class ChatProvider with ChangeNotifier {
       // Add to local messages
       _addMessage(chatMessage);
 
-      // Send via socket
-      if (_socket != null && _isConnected) {
-        _socket!.emit('sendMessage', chatMessage.toJson());
+      // Save to database
+      final result = await SupabaseService.sendMessage(chatMessage.toJson());
+      if (result != null) {
+        // Update with server response if needed
+        final serverMessage = ChatMessage.fromJson(result);
+        _messages[chatRoomId]?[_messages[chatRoomId]!.indexWhere(
+              (m) => m.id == chatMessage.id,
+            )] =
+            serverMessage;
         // Update status to sent
         _updateMessageStatus(chatMessage.id, MessageStatus.sent);
+      } else {
+        // If failed, keep as sending
+        _updateMessageStatus(chatMessage.id, MessageStatus.sending);
       }
-
-      // Save to database
-      await SupabaseService.client
-          .from('messages')
-          .insert(chatMessage.toJson());
 
       notifyListeners();
       return true;
@@ -219,11 +207,14 @@ class ChatProvider with ChangeNotifier {
       );
 
       // Save to database
-      await SupabaseService.client.from('chat_rooms').insert(chatRoom.toJson());
-
-      _chatRooms.add(chatRoom);
-      notifyListeners();
-      return chatRoom.id;
+      final result = await SupabaseService.createChatRoom(chatRoom.toJson());
+      if (result != null) {
+        final serverChatRoom = ChatRoom.fromJson(result);
+        _chatRooms.add(serverChatRoom);
+        notifyListeners();
+        return serverChatRoom.id;
+      }
+      return null;
     } catch (e) {
       debugPrint('Error creating chat room: $e');
       return null;
@@ -319,11 +310,11 @@ class ChatProvider with ChangeNotifier {
         ?.id;
   }
 
-  // Send typing indicator
+  // Send typing indicator - TODO: Implement with Supabase real-time
   void sendTypingStatus(String chatRoomId, bool isTyping) {
-    if (_socket != null && _isConnected) {
-      _socket!.emit('typing', {'chatRoomId': chatRoomId, 'isTyping': isTyping});
-    }
+    // For now, just update local state
+    _typingUsers[chatRoomId] = isTyping;
+    notifyListeners();
   }
 
   // Delete a message
@@ -337,10 +328,7 @@ class ChatProvider with ChangeNotifier {
       }
 
       // Delete from database
-      await SupabaseService.client
-          .from('messages')
-          .delete()
-          .eq('id', messageId);
+      await SupabaseService.deleteMessage(messageId);
 
       return true;
     } catch (e) {

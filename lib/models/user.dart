@@ -91,15 +91,14 @@ class Doctor {
       name: json['name'] as String,
       specialty: json['specialty'] as String,
       location: json['location'] as String,
-      rating: (json['rating'] as num).toDouble(),
-      reviewCount: json['reviewCount'] as int,
-      profileImage: json['profileImage'] as String?,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: json['review_count'] as int? ?? 0,
+      profileImage: json['profile_image'] as String?,
       qualifications: json['qualifications'] as String,
-      experienceYears: json['experienceYears'] as int,
-      isAvailable: json['isAvailable'] as bool? ?? true,
-      workingHours: (json['workingHours'] as List<dynamic>)
-          .map((e) => WorkingHour.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      experienceYears: json['experience_years'] as int? ?? 0,
+      isAvailable: json['is_available'] as bool? ?? true,
+      workingHours:
+          [], // Default empty, can be populated from clinic_address or other logic
     );
   }
 

@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 
@@ -59,6 +63,70 @@ class SupabaseService {
     Map<String, dynamic> data,
   ) async {
     await client.from('users').update(data).eq('id', userId);
+  }
+
+  // Storage operations
+  static Future<String?> uploadProfileImage(
+    String userId,
+    String imagePath,
+  ) async {
+    try {
+      // For web platform, we'll use a placeholder or skip upload for now
+      // In a real implementation, you would need to handle web file uploads
+      if (kIsWeb) {
+        debugPrint('Web platform detected - image upload not implemented yet');
+        return null;
+      }
+
+      // Read the image file
+      final file = File(imagePath);
+      if (!await file.exists()) return null;
+
+      // Create unique filename
+      final fileName =
+          'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Upload to Supabase Storage
+      await client.storage
+          .from('profile-images') // Bucket name
+          .upload(
+            fileName,
+            file,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true, // Overwrite if exists
+            ),
+          );
+
+      // Get public URL
+      final publicUrl = client.storage
+          .from('profile-images')
+          .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('Error uploading profile image: $e');
+      return null;
+    }
+  }
+
+  static Future<void> deleteProfileImage(String imageUrl) async {
+    try {
+      // For web platform, skip deletion
+      if (kIsWeb) {
+        debugPrint('Web platform detected - image deletion skipped');
+        return;
+      }
+
+      // Extract filename from URL
+      final uri = Uri.parse(imageUrl);
+      final fileName = uri.pathSegments.last;
+
+      // Delete from storage
+      await client.storage.from('profile-images').remove([fileName]);
+    } catch (e) {
+      debugPrint('Error deleting profile image: $e');
+    }
   }
 
   // Database operations - Doctors
@@ -161,4 +229,87 @@ class SupabaseService {
         .order('created_at', ascending: false)
         .map((data) => List<Map<String, dynamic>>.from(data));
   }
+
+  // Database operations - Chat Rooms
+  static Future<List<Map<String, dynamic>>> getUserChatRooms(
+    String userId,
+  ) async {
+    // Get chat rooms where user is doctor
+    final doctorRooms = await client
+        .from('chat_rooms')
+        .select()
+        .eq('doctor_id', userId)
+        .order('created_at', ascending: false);
+
+    // Get chat rooms where user is patient
+    final patientRooms = await client
+        .from('chat_rooms')
+        .select()
+        .eq('patient_id', userId)
+        .order('created_at', ascending: false);
+
+    final allRooms = [...doctorRooms, ...patientRooms];
+    return List<Map<String, dynamic>>.from(allRooms as List);
+  }
+
+  static Future<Map<String, dynamic>?> createChatRoom(
+    Map<String, dynamic> chatRoomData,
+  ) async {
+    final response = await client
+        .from('chat_rooms')
+        .insert(chatRoomData)
+        .select()
+        .single();
+    return response;
+  }
+
+  // Database operations - Messages
+  static Future<List<Map<String, dynamic>>> getChatMessages(
+    String chatRoomId,
+  ) async {
+    final response = await client
+        .from('messages')
+        .select()
+        .eq('chat_room_id', chatRoomId)
+        .order('timestamp', ascending: true);
+    return List<Map<String, dynamic>>.from(response as List);
+  }
+
+  static Future<Map<String, dynamic>?> sendMessage(
+    Map<String, dynamic> messageData,
+  ) async {
+    final response = await client
+        .from('messages')
+        .insert(messageData)
+        .select()
+        .single();
+    return response;
+  }
+
+  static Future<void> deleteMessage(String messageId) async {
+    await client.from('messages').delete().eq('id', messageId);
+  }
+
+  // Real-time subscriptions for chat - TODO: Implement when stream 'or' is fixed
+  // static Stream<List<Map<String, dynamic>>> subscribeToMessages(
+  //   String chatRoomId,
+  // ) {
+  //   return client
+  //       .from('messages')
+  //       .stream(primaryKey: ['id'])
+  //       .eq('chat_room_id', chatRoomId)
+  //       .order('timestamp', ascending: true)
+  //       .map((data) => List<Map<String, dynamic>>.from(data));
+  // }
+
+  // static Stream<List<Map<String, dynamic>>> subscribeToChatRooms(
+  //   String userId,
+  // ) {
+  //   return client
+  //       .from('chat_rooms')
+  //       .stream(primaryKey: ['id'])
+  //       .or('doctor_id.eq.$userId,patient_id.eq.$userId')
+  //       .order('created_at', ascending: false)
+  //       .map((data) => List<Map<String, dynamic>>.from(data));
+  // }
 }

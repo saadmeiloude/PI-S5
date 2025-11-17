@@ -125,6 +125,7 @@ class OnboardingScreen extends StatelessWidget {
             // NOTE: To use the actual image, you would need to add it to your Flutter project's assets folder
             // and replace this placeholder with: Image.asset('assets/pasted_file_HkR7VK_home.jpg')
             buildImagePlaceholder(),
+            Image.asset('assets/Medicine-hom.png'),
 
             // 2. Content Section
             Padding(

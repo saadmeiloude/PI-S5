@@ -45,9 +45,24 @@ class _SearchScreenState extends State<SearchScreen> {
 
     if (_selectedFilter != 'الكل') {
       if (_selectedFilter == 'التخصصات') {
-        // For now, just show all, but could implement specialty filter
+        if (query.isNotEmpty) {
+          doctors = doctors
+              .where(
+                (doctor) => doctor.specialty.toLowerCase().contains(
+                  query.toLowerCase(),
+                ),
+              )
+              .toList();
+        }
       } else if (_selectedFilter == 'المواقع') {
-        // For now, just show all, but could implement location filter
+        if (query.isNotEmpty) {
+          doctors = doctors
+              .where(
+                (doctor) =>
+                    doctor.location.toLowerCase().contains(query.toLowerCase()),
+              )
+              .toList();
+        }
       } else if (_selectedFilter == 'التقييمات') {
         doctors = doctors.where((doctor) => doctor.rating >= 4.5).toList();
       }

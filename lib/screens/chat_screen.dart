@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:record/record.dart';
+// import 'package:record/record.dart'; // Temporarily disabled
 import '../providers/chat_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/chat.dart';
@@ -13,11 +13,13 @@ import '../models/chat.dart';
 class ChatScreen extends StatefulWidget {
   final String chatRoomId;
   final String doctorName;
+  final String doctorId;
 
   const ChatScreen({
     super.key,
     required this.chatRoomId,
     required this.doctorName,
+    required this.doctorId,
   });
 
   @override
@@ -27,7 +29,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final AudioRecorder _audioRecorder = AudioRecorder();
+  // final Record _audioRecorder = Record(); // Temporarily disabled
   final TextEditingController _searchController = TextEditingController();
   bool _isRecording = false;
   String? _recordingPath;
@@ -54,7 +56,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     _searchController.dispose();
-    _audioRecorder.dispose();
+    // _audioRecorder.dispose(); // Temporarily disabled
     _typingTimer?.cancel();
     super.dispose();
   }
@@ -590,7 +592,7 @@ class _ChatScreenState extends State<ChatScreen> {
       chatProvider.sendMessage(
         chatRoomId: widget.chatRoomId,
         senderId: userProvider.currentUser!.id,
-        receiverId: 'doctor_id', // This should be dynamic
+        receiverId: widget.doctorId,
         message: message,
       );
 
@@ -737,7 +739,7 @@ class _ChatScreenState extends State<ChatScreen> {
       chatProvider.sendMessage(
         chatRoomId: widget.chatRoomId,
         senderId: userProvider.currentUser!.id,
-        receiverId: 'doctor_id', // This should be dynamic
+        receiverId: widget.doctorId,
         message: 'تم إرسال ملف', // Placeholder message
         type: type,
         attachmentUrl: filePath, // In production, this would be uploaded URL
@@ -746,6 +748,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _toggleRecording() async {
+    // Audio recording temporarily disabled - uncomment when record package is fixed
+    /*
     try {
       if (_isRecording) {
         // Stop recording
@@ -771,7 +775,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
         if (hasPermission) {
           final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-          await _audioRecorder.start(const RecordConfig(), path: path);
+          await _audioRecorder.start(
+            encoder: AudioEncoder.aacLc,
+            bitRate: 128000,
+          );
           setState(() {
             _isRecording = true;
             _recordingPath = null;
@@ -793,6 +800,14 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     }
+    */
+
+    // Show temporary message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('التسجيل الصوتي غير متاح حالياً')),
+      );
+    }
   }
 
   void _sendVoiceMessage(String filePath) {
@@ -803,7 +818,7 @@ class _ChatScreenState extends State<ChatScreen> {
       chatProvider.sendMessage(
         chatRoomId: widget.chatRoomId,
         senderId: userProvider.currentUser!.id,
-        receiverId: 'doctor_id', // This should be dynamic
+        receiverId: widget.doctorId,
         message: 'رسالة صوتية', // Placeholder message
         type: MessageType.voice,
         attachmentUrl: filePath, // In production, this would be uploaded URL
@@ -826,16 +841,46 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _startVideoCall() {
-    // Show message that video call is not available
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('خدمة المكالمات المرئية غير متاحة حالياً')),
+    // Check if Agora is configured
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('بدء المكالمة المرئية...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    Navigator.pushNamed(
+      context,
+      '/video_call',
+      arguments: {
+        'channelName': widget.chatRoomId,
+        'doctorName': widget.doctorName,
+        'isVideoCall': true,
+      },
     );
   }
 
   void _startVoiceCall() {
-    // Show message that voice call is not available
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('خدمة المكالمات الصوتية غير متاحة حالياً')),
+    // Check if Agora is configured
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('بدء المكالمة الصوتية...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    Navigator.pushNamed(
+      context,
+      '/video_call',
+      arguments: {
+        'channelName': widget.chatRoomId,
+        'doctorName': widget.doctorName,
+        'isVideoCall': false,
+      },
     );
   }
 

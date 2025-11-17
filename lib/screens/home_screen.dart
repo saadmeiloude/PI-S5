@@ -41,29 +41,72 @@ class HomeScreen extends StatelessWidget {
     BuildContext context, [
     Appointment? appointment,
   ]) {
-    // Placeholder for the image
-    Widget imagePlaceholder = Container(
-      height: 140,
+    // Enhanced Medicine image with professional styling
+    Widget medicineImage = Container(
+      constraints: const BoxConstraints(maxWidth: 400, maxHeight: 300),
+      width: double.infinity,
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
         gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE3F2FD), Color(0xFFB3E5FC)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF00BFFF), Color(0xFF87CEEB)],
         ),
-        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF00BFFF).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          Icons.local_hospital,
-          size: 48,
-          color: const Color(0xFF00BFFF).withOpacity(0.7),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background gradient for better image visibility
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF00BFFF).withOpacity(0.1),
+                    const Color(0xFF87CEEB).withOpacity(0.2),
+                  ],
+                ),
+              ),
+            ),
+            // Center the medicine image
+            Center(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Image.asset(
+                    'assets/Medicine-cuate.png',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                        child: Icon(
+                          Icons.local_hospital,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -85,7 +128,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            imagePlaceholder,
+            medicineImage,
             const SizedBox(height: 12),
             const Text(
               'لا توجد مواعيد قادمة',
@@ -127,7 +170,7 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          imagePlaceholder,
+          medicineImage,
           const SizedBox(height: 12),
           Text(
             'موعد ${appointment.doctorName}',

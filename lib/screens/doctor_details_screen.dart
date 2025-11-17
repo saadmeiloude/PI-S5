@@ -467,6 +467,7 @@ class DoctorDetailsScreen extends StatelessWidget {
                             arguments: {
                               'chatRoomId': chatRoomId,
                               'doctorName': doctor.name,
+                              'doctorId': doctor.id,
                             },
                           );
                         } else {

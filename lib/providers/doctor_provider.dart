@@ -1,14 +1,30 @@
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
+import '../services/supabase_service.dart';
 
 class DoctorProvider with ChangeNotifier {
   final List<Doctor> _doctors = [];
 
   List<Doctor> get doctors => List.unmodifiable(_doctors);
 
-  // Initialize with sample data
+  // Initialize with data from database
   DoctorProvider() {
-    _initializeSampleData();
+    _loadDoctors();
+  }
+
+  Future<void> _loadDoctors() async {
+    try {
+      final doctorsData = await SupabaseService.getDoctors();
+      _doctors.clear();
+      _doctors.addAll(
+        doctorsData.map((data) => Doctor.fromJson(data)).toList(),
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading doctors: $e');
+      // Fallback to sample data if database fails
+      _initializeSampleData();
+    }
   }
 
   void _initializeSampleData() {
@@ -127,11 +143,37 @@ class DoctorProvider with ChangeNotifier {
     required int rating,
     required String reviewText,
   }) async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
 
-    // In a real app, this would update the doctor's rating and reviews
-    // For demo purposes, just return true
-    return true;
+      // Update local doctor data
+      final doctorIndex = _doctors.indexWhere((doc) => doc.id == doctorId);
+      if (doctorIndex != -1) {
+        final doctor = _doctors[doctorIndex];
+        // Calculate new rating (simple average)
+        final newReviewCount = doctor.reviewCount + 1;
+        final newRating =
+            ((doctor.rating * doctor.reviewCount) + rating) / newReviewCount;
+
+        _doctors[doctorIndex] = Doctor(
+          id: doctor.id,
+          name: doctor.name,
+          specialty: doctor.specialty,
+          location: doctor.location,
+          rating: newRating,
+          reviewCount: newReviewCount,
+          qualifications: doctor.qualifications,
+          experienceYears: doctor.experienceYears,
+          workingHours: doctor.workingHours,
+        );
+        notifyListeners();
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('Error adding review: $e');
+      return false;
+    }
   }
 }

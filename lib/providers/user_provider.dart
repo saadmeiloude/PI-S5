@@ -316,7 +316,36 @@ class UserProvider with ChangeNotifier {
       if (phone != null) updateData['phone'] = phone;
       if (birthDate != null)
         updateData['birth_date'] = birthDate.toIso8601String();
-      if (profileImage != null) updateData['profile_image'] = profileImage;
+
+      // Handle profile image upload
+      String? imageUrl;
+      if (profileImage != null && profileImage.isNotEmpty) {
+        // If it's a local file path, upload to storage
+        if (profileImage.startsWith('/') || profileImage.contains(':')) {
+          // Delete old profile image if exists
+          if (_currentUser!.profileImage != null) {
+            await SupabaseService.deleteProfileImage(
+              _currentUser!.profileImage!,
+            );
+          }
+
+          // Upload new image to storage
+          imageUrl = await SupabaseService.uploadProfileImage(
+            _currentUser!.id,
+            profileImage,
+          );
+
+          if (imageUrl != null) {
+            updateData['profile_image'] = imageUrl;
+          } else {
+            throw Exception('Failed to upload profile image');
+          }
+        } else {
+          // It's already a URL, use it directly
+          imageUrl = profileImage;
+          updateData['profile_image'] = profileImage;
+        }
+      }
 
       await SupabaseService.updateUserProfile(_currentUser!.id, updateData);
 
@@ -325,7 +354,7 @@ class UserProvider with ChangeNotifier {
         name: name,
         phone: phone,
         birthDate: birthDate,
-        profileImage: profileImage,
+        profileImage: imageUrl,
       );
 
       _isLoading = false;

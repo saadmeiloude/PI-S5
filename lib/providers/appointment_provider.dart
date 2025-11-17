@@ -26,14 +26,15 @@ class AppointmentProvider with ChangeNotifier {
   }
 
   void _initializeSampleData() {
+    final now = DateTime.now();
     _appointments.addAll([
       Appointment(
         id: 'apt_001',
         doctorId: 'doc_001',
         doctorName: 'الدكتور عامر السليمان',
         specialty: 'جراحة العظام',
-        date: DateTime(2025, 11, 15, 10, 0),
-        time: '10:00 mz',
+        date: now.add(Duration(days: 2, hours: 10)),
+        time: '10:00 صباحاً',
         status: AppointmentStatus.scheduled,
       ),
       Appointment(
@@ -41,18 +42,27 @@ class AppointmentProvider with ChangeNotifier {
         doctorId: 'doc_002',
         doctorName: 'الدكتور ماجد العلي',
         specialty: 'أطباء الأسرة والأسنان',
-        date: DateTime(2025, 11, 16, 14, 0),
-        time: '2:00 م',
+        date: now.add(Duration(days: 5, hours: 14)),
+        time: '2:00 عصراً',
         status: AppointmentStatus.scheduled,
       ),
       Appointment(
         id: 'apt_003',
-        doctorId: 'doc_001',
-        doctorName: 'الدكتور عامر السليمان',
-        specialty: 'جراحة العظام',
-        date: DateTime(2025, 10, 12, 9, 0),
-        time: '9:00 m',
+        doctorId: 'doc_003',
+        doctorName: 'الدكتورة سارة أحمد',
+        specialty: 'طب الأطفال',
+        date: now.subtract(Duration(days: 7, hours: 9)),
+        time: '9:00 صباحاً',
         status: AppointmentStatus.completed,
+      ),
+      Appointment(
+        id: 'apt_004',
+        doctorId: 'doc_004',
+        doctorName: 'الدكتور محمد حسن',
+        specialty: 'أمراض القلب',
+        date: now.add(Duration(days: 1, hours: 16)),
+        time: '4:00 عصراً',
+        status: AppointmentStatus.scheduled,
       ),
     ]);
   }

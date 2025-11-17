@@ -34,6 +34,9 @@ dependencies:
 
   # Date picker and calendar functionality
   flutter_datetime_picker: ^1.5.1
+  table_calendar: ^3.0.9
+  flutter_staggered_animations: ^1.1.1
+  lottie: ^3.1.2
 
   # OTP verification input
   pinput: ^3.0.1
@@ -82,8 +85,8 @@ dependencies:
   # Permissions handling
   permission_handler: ^11.3.1
 
-  # Audio recording
-  record: ^5.1.2
+  # Audio recording - temporarily disabled
+  # record: ^5.1.2
 
   # PDF generation for reports
   pdf: ^3.10.7
@@ -110,10 +113,17 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
-  #   - assets/fonts/
+  assets:
+    - assets/Medicine-hom.png
+    - assets/Medicine-cuate.png
+    - assets/Sign up-rafiki.png
+    - assets/Design tools-amico.png
+    - assets/Authentication-cuate.png
+    - assets/Reset password-bro.png
+    - assets/
+    #   - assets/images/
+    #   - assets/icons/
+    #   - assets/fonts/
 
   # To add custom fonts to your application, add a fonts section here,
   # in this flutter section. Each entry in this list should have a

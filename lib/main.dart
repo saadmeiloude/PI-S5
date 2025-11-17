@@ -19,7 +19,7 @@ import 'screens/search_screen.dart';
 import 'screens/doctor_details_screen.dart';
 import 'screens/select_time_screen.dart';
 import 'screens/consultations_screen.dart';
-import 'screens/appointments_screen.dart';
+import 'screens/advanced_appointments_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/notification_settings_screen.dart';
 import 'screens/restart-mot-de-passe.dart';
@@ -129,7 +129,7 @@ class MyApp extends StatelessWidget {
           },
           '/select_time': (context) => const SelectTimeScreen(),
           '/consultations': (context) => const ConsultationsScreen(),
-          '/appointments': (context) => const AppointmentsScreen(),
+          '/appointments': (context) => const AdvancedAppointmentsScreen(),
           '/profile': (context) => const ProfileScreen(),
           '/notification_settings': (context) =>
               const NotificationSettingsScreen(),
@@ -141,6 +141,7 @@ class MyApp extends StatelessWidget {
             return ChatScreen(
               chatRoomId: args['chatRoomId']!,
               doctorName: args['doctorName']!,
+              doctorId: args['doctorId']!,
             );
           },
           '/chat_list': (context) => const ChatListScreen(),

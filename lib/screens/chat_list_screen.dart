@@ -199,6 +199,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             arguments: {
               'chatRoomId': chatRoom.id,
               'doctorName': chatRoom.doctorName,
+              'doctorId': chatRoom.doctorId,
             },
           );
         },

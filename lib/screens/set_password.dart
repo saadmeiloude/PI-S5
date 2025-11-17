@@ -132,6 +132,82 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
+                    // Reset password image
+                    Center(
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          maxWidth: 400,
+                          maxHeight: 300,
+                        ),
+                        width: double.infinity,
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _primaryColor.withOpacity(0.2),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Stack(
+                                children: [
+                                  // Background gradient
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          _primaryColor.withOpacity(0.1),
+                                          const Color(
+                                            0xFF87CEEB,
+                                          ).withOpacity(0.2),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  // Reset password image
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20.0),
+                                      child: Image.asset(
+                                        'assets/Reset password-bro.png',
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: _primaryColor
+                                                      .withOpacity(0.1),
+                                                ),
+                                                child: Icon(
+                                                  Icons.lock_reset,
+                                                  size: 40,
+                                                  color: _primaryColor,
+                                                ),
+                                              );
+                                            },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
                     // New Password Field
                     _buildPasswordField('كلمة المرور الجديدة'),
                     const SizedBox(height: 5),

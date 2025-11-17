@@ -9,7 +9,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   iris_method_channel
   permission_handler_windows
   printing
-  record_windows
   smart_auth
   url_launcher_windows
 )
